@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="jenkins," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="初探jenkins缘起 由于项目中使用SpringCloud作为整体开发架构，虽然微服务的架构可以更好的解耦，针对不同的业务可以使用更加适用的技术栈来解决问题，对局部进行扩容也很简单。随然微服务架构相对单体架构有这样那样的好处，但是也有他自身问题。那就是部署方面过于麻烦。由于最近项目需要向线上环境进行部署。从release版本号到构建再到部署，所有的微服务都需要进行相同的动作。在微服务不多的情况下">
+<meta name="keywords" content="jenkins">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探jenkins">
+<meta property="og:url" content="http://lpwangblog.com/2017/11/27/jenkins_first/index.html">
+<meta property="og:site_name" content="lpwang个人博客">
+<meta property="og:description" content="初探jenkins缘起 由于项目中使用SpringCloud作为整体开发架构，虽然微服务的架构可以更好的解耦，针对不同的业务可以使用更加适用的技术栈来解决问题，对局部进行扩容也很简单。随然微服务架构相对单体架构有这样那样的好处，但是也有他自身问题。那就是部署方面过于麻烦。由于最近项目需要向线上环境进行部署。从release版本号到构建再到部署，所有的微服务都需要进行相同的动作。在微服务不多的情况下">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://wx2.sinaimg.cn/large/74b07056ly1flwm551thij20yh0i975o.jpg">
+<meta property="og:image" content="http://wx3.sinaimg.cn/large/74b07056ly1flwm55hk69j20ig0fq0tb.jpg">
+<meta property="og:image" content="http://wx3.sinaimg.cn/large/74b07056ly1flwm9muzcmj20is0k1753.jpg">
+<meta property="og:image" content="http://wx4.sinaimg.cn/large/74b07056ly1flwm56xawyj21z30nb75e.jpg">
+<meta property="og:updated_time" content="2018-05-18T12:58:08.841Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="初探jenkins">
+<meta name="twitter:description" content="初探jenkins缘起 由于项目中使用SpringCloud作为整体开发架构，虽然微服务的架构可以更好的解耦，针对不同的业务可以使用更加适用的技术栈来解决问题，对局部进行扩容也很简单。随然微服务架构相对单体架构有这样那样的好处，但是也有他自身问题。那就是部署方面过于麻烦。由于最近项目需要向线上环境进行部署。从release版本号到构建再到部署，所有的微服务都需要进行相同的动作。在微服务不多的情况下">
+<meta name="twitter:image" content="http://wx2.sinaimg.cn/large/74b07056ly1flwm551thij20yh0i975o.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lpwangblog.com/2017/11/27/jenkins_first/"/>
+
+
+
+
+
+  <title>初探jenkins | lpwang个人博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">lpwang个人博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lpwangblog.com/2017/11/27/jenkins_first/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="lpwang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://tvax4.sinaimg.cn/crop.85.218.533.533.180/74b07056ly8fgglakg43yj20hs0qogm1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lpwang个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">初探jenkins</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-27T14:32:22+08:00">
+                2017-11-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/jenkins/" itemprop="url" rel="index">
+                    <span itemprop="name">jenkins</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="初探jenkins"><a href="#初探jenkins" class="headerlink" title="初探jenkins"></a>初探jenkins</h1><h2 id="缘起"><a href="#缘起" class="headerlink" title="缘起"></a>缘起</h2><blockquote>
+<p>由于项目中使用SpringCloud作为整体开发架构，虽然微服务的架构可以更好的解耦，针对不同的业务可以使用更加适用的技术栈来解决问题，对局部进行扩容也很简单。随然微服务架构相对单体架构有这样那样的好处，但是也有他自身问题。那就是部署方面过于麻烦。由于最近项目需要向线上环境进行部署。从release版本号到构建再到部署，所有的微服务都需要进行相同的动作。在微服务不多的情况下这样重复的动作是没有问题的。但是随着项目的深入我们的微服务越来越多，每次部署都忙一天，而且有大量的重复工作。在完成上次部署上线之后，我深深的感觉微服务搭配jenkins是多么爽的一件事情，这边提交，那边持续集成，持续部署。由于项目在测试环境搭建了jenkins，而在开发和线上环境并没有部署，所以我打算在开发环境部署一套，运行ok之后，再部署到线上环境，解决线上部署的问题。</p>
+</blockquote>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>本机是linux,所以直接使用linux的方式安装jenkins.(以下是ubuntu发行版,其他centos发行版请自行做相应的调整)</p>
+<ol>
+<li>添加key到系统中</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -</div></pre></td></tr></table></figure>
+<ol>
+<li>添加源地址</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">deb https://pkg.jenkins.io/debian-stable binary/</div></pre></td></tr></table></figure>
+<ol>
+<li>升级安装源索引和安装</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo apt-get update</div><div class="line">sudo apt-get install jenkins</div></pre></td></tr></table></figure>
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><ol>
+<li><p>启动jenkins</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">systemctl start jenkins</div></pre></td></tr></table></figure>
+</li>
+<li><p>访问web控制台,jenkins默认开放端口为8080.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http://localhost:8080</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h2><ol>
+<li>blue ocean</li>
+</ol>
+<p>blue ocean 是jenkins的pipline插件,其插件的界面和功能要比原生的pipline更漂亮更强大。我们可以从，系统管理中选择管理插件进行安装blue ocean插件。同时jenkins还支持很多插件。我们可以在插件管理中进行搜索然后进行安装。在安装blue ocean之后我们开始持续集成的配置工作。</p>
+<h2 id="编写JenkinsFile文件"><a href="#编写JenkinsFile文件" class="headerlink" title="编写JenkinsFile文件"></a>编写JenkinsFile文件</h2><p>首先我们需要编写JenkinsFile文件到需要持续集成的项目根目录下，这里需要强调一下jenkinsfile文件存放的位置。一定要放到项目根目录下面。否则会发生找不到jenkinsfile文件的错误。jenkinsfile文件使用groovy的语法进行编写.首先先给出示例</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">pipeline &#123;</div><div class="line">    agent any</div><div class="line"></div><div class="line">    stages &#123;</div><div class="line">        stage(<span class="string">'Build'</span>) &#123;</div><div class="line">            steps &#123;</div><div class="line">                echo <span class="string">'Building..'</span></div><div class="line">                sh <span class="string">'gradle clean build'</span></div><div class="line">                dir(<span class="string">'./build/libs/'</span>) &#123;</div><div class="line">                    sh <span class="string">'echo $PWD'</span></div><div class="line">                    sh <span class="string">'mv ./iot-update-*.jar iot-update.jar'</span></div><div class="line">                    sh <span class="string">'scp ./iot-update.jar kdxcloud@iot-update:/home/kdxcloud/devevn'</span></div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        stage(<span class="string">'Test'</span>) &#123;</div><div class="line">            steps &#123;</div><div class="line">                echo <span class="string">'Testing..'</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        stage(<span class="string">'Deploy'</span>) &#123;</div><div class="line">            steps &#123;</div><div class="line">                echo <span class="string">'Deploying....'</span></div><div class="line">		        echo <span class="string">'停止iot-update微服务'</span></div><div class="line">                sh <span class="string">'ssh kdxcloud@iot-update -tt sudo systemctl stop kdxcloud-iot-update'</span></div><div class="line">		        echo <span class="string">'启动iot-update微服务'</span></div><div class="line">                sh <span class="string">'ssh kdxcloud@iot-update -tt sudo systemctl start kdxcloud-iot-update'</span></div><div class="line">                echo <span class="string">'I succeeeded!'</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>agent 指哪个jenkins节点执行该pipeline</li>
+<li>stage 指构建的阶段</li>
+<li>step 指某个阶段下执行的具体步骤在steps中命令的执行是串行的</li>
+</ul>
+<h2 id="互信配置"><a href="#互信配置" class="headerlink" title="互信配置"></a>互信配置</h2><p>由于构建的执行包需要上传到远程主机上，所以需要配置互信让部署不需要人为干预。</p>
+<ol>
+<li>ssh 免密登录</li>
+</ol>
+<p>我的机器是linux，所以使用命令ssh-keygen，生成用户的公钥和私钥，然后在用户的家目录下面的.ssh文件夹下面，找到文件id_rsa.pub，里面存储的是刚刚使用命令生成的用户的公钥，然后将文件里面的内容复制并远程主机需要登录的用户的家目录下的.ssh文件夹下面的authorized_keys文件下。这样我们在本机使用ssh命令登录的时候就不需要使用密码了。</p>
+<ol>
+<li>将远程主机的用户添加至sudo组</li>
+</ol>
+<p>当我们登录到远程主机之后，需要做一些停止现有服务，重新拉起服务的操作，然而这些操作为了安全起见都是只用root用户才可以进行操作的。当我们使用普通的用户进行这样的操作的时候我们一般都会使用sudo命令将普通用户执行该命令时候权限提升到root权限，但是这样一来我们需要使用root密码进行确认之后，命令才可以执行，这样是很不方便的，所以我们将执行重启服务命令的用户添加值sudo组里面这样就可以不需要密码确认了。在远程主机环境下使用visudo命令将编写位于/etc/sudoers的文件，然后找到<code>root    ALL=(ALL)       ALL</code>这一行然后在后面添加一行信息<code>wanglp    ALL=(ALL)       ALL</code>这样就可以了，当然我在这里偷懒了，将所有root可以执行的命令都免密的交给wanglp这个用户去执行是很不安全的，我们可以选择指定的几个命令记性免密。</p>
+<p>在完成以上两步的配置之后就可以在执行jenkinsfile脚本的时候不需要人为的干预了.</p>
+<h2 id="添加任务"><a href="#添加任务" class="headerlink" title="添加任务"></a>添加任务</h2><p>现在我们添加任务在jenkins控制台下面添加构建任务，由于我们添加了blue ocean插件，所以我们使用blue ocean插件进行任务的添加。</p>
+<ol>
+<li>点击左侧导航栏上的blue ocean插件</li>
+</ol>
+<p><img src="http://wx2.sinaimg.cn/large/74b07056ly1flwm551thij20yh0i975o.jpg" alt=""></p>
+<ol>
+<li>选择代码管理工具，我们项目使用的是gogs所以选择git</li>
+</ol>
+<p><img src="http://wx3.sinaimg.cn/large/74b07056ly1flwm55hk69j20ig0fq0tb.jpg" alt=""></p>
+<ol>
+<li>然后再添加项目的url地址，这里需要说明一下由于我们项目没有使用添加公钥私钥的方式来进行代码拉取和推送的验证只是使用了http+密码的方式，所有再添加url之后还需要添加git的用户名和密码。建议使用公钥私钥的验证方式。</li>
+</ol>
+<p><img src="http://wx3.sinaimg.cn/large/74b07056ly1flwm9muzcmj20is0k1753.jpg" alt=""></p>
+<ol>
+<li>点击创建pipeline，完成创建过程，需要注意的是在导入该项目之前，在该项目的根路径下一定要存在jenkinsfile文件。这样jenkins才能根据项目中的jenkinsfile文件中的脚本进行项目的集成。</li>
+</ol>
+<ol>
+<li>在点击集成任务后我们可以查看具体的执行步骤和执行情况，以及报错信息。</li>
+</ol>
+<p><img src="http://wx4.sinaimg.cn/large/74b07056ly1flwm56xawyj21z30nb75e.jpg" alt=""></p>
+<h2 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h2><p>经过了以上的几步之后我在本地编写完代码之后push之后，再在jenkins控制台页面点击开始任务的按钮就可以完成代码的拉取，jar包上传，服务重启等步骤。简化了很多人为的重复的工作。这就是持续集成带来的好处，但是到这里也只是jenkins的冰山一角的功能，而且到现在为止也只是半自动化，还是需要进入jenkins控制台进行操作。之后的文章会介绍全自动化的持续集成，也就是说我在本地push完代码之后，jenkins自动的触发执行脚本进行项目的集成步骤。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/jenkins/" rel="tag"># jenkins</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/26/jmeter-press-netty/" rel="next" title="使用jmeter压测Netty通讯服务">
+                <i class="fa fa-chevron-left"></i> 使用jmeter压测Netty通讯服务
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/18/Git-Commit-Guidelines/" rel="prev" title="angular代码提交规范">
+                angular代码提交规范 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://tvax4.sinaimg.cn/crop.85.218.533.533.180/74b07056ly8fgglakg43yj20hs0qogm1.jpg"
+               alt="lpwang" />
+          <p class="site-author-name" itemprop="name">lpwang</p>
+           
+              <p class="site-description motion-element" itemprop="description">no pain no gain</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lpwang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/1957720150?topnav=1&wvr=6&topsug=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#初探jenkins"><span class="nav-number">1.</span> <span class="nav-text">初探jenkins</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#缘起"><span class="nav-number">1.1.</span> <span class="nav-text">缘起</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">1.2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动"><span class="nav-number">1.3.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装插件"><span class="nav-number">1.4.</span> <span class="nav-text">安装插件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写JenkinsFile文件"><span class="nav-number">1.5.</span> <span class="nav-text">编写JenkinsFile文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#互信配置"><span class="nav-number">1.6.</span> <span class="nav-text">互信配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#添加任务"><span class="nav-number">1.7.</span> <span class="nav-text">添加任务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结束"><span class="nav-number">1.8.</span> <span class="nav-text">结束</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lpwang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

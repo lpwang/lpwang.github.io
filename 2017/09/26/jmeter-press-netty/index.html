@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="jmeter netty," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="使用jmeter压测Netty通讯服务 项目中使用netty框架开发底层通讯服务器模块。设备与通讯服务器采用tcp长连接的通讯方式。建立链接过程使用ssl对连接通道进行加密。建立连接后定时向服务器发送心跳数据。  测试目标 单台 netty server 维持长连接数量。 长连接数量增长下tps指数。 长连接数量增长下jvm的堆栈内存变化。  测试工具 jmeter jvisualvm  数据准备">
+<meta name="keywords" content="jmeter netty">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用jmeter压测Netty通讯服务">
+<meta property="og:url" content="http://lpwangblog.com/2017/09/26/jmeter-press-netty/index.html">
+<meta property="og:site_name" content="lpwang个人博客">
+<meta property="og:description" content="使用jmeter压测Netty通讯服务 项目中使用netty框架开发底层通讯服务器模块。设备与通讯服务器采用tcp长连接的通讯方式。建立链接过程使用ssl对连接通道进行加密。建立连接后定时向服务器发送心跳数据。  测试目标 单台 netty server 维持长连接数量。 长连接数量增长下tps指数。 长连接数量增长下jvm的堆栈内存变化。  测试工具 jmeter jvisualvm  数据准备">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://wx3.sinaimg.cn/large/74b07056ly1fhq4k9amh9j216u0ejwfj.jpg">
+<meta property="og:image" content="http://wx1.sinaimg.cn/large/74b07056ly1fhqelo3fwtj20cc0j5wes.jpg">
+<meta property="og:image" content="http://wx1.sinaimg.cn/large/74b07056ly1fhqeln4z5dj21d60ptmyx.jpg">
+<meta property="og:updated_time" content="2018-05-18T12:58:08.841Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用jmeter压测Netty通讯服务">
+<meta name="twitter:description" content="使用jmeter压测Netty通讯服务 项目中使用netty框架开发底层通讯服务器模块。设备与通讯服务器采用tcp长连接的通讯方式。建立链接过程使用ssl对连接通道进行加密。建立连接后定时向服务器发送心跳数据。  测试目标 单台 netty server 维持长连接数量。 长连接数量增长下tps指数。 长连接数量增长下jvm的堆栈内存变化。  测试工具 jmeter jvisualvm  数据准备">
+<meta name="twitter:image" content="http://wx3.sinaimg.cn/large/74b07056ly1fhq4k9amh9j216u0ejwfj.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lpwangblog.com/2017/09/26/jmeter-press-netty/"/>
+
+
+
+
+
+  <title>使用jmeter压测Netty通讯服务 | lpwang个人博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">lpwang个人博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lpwangblog.com/2017/09/26/jmeter-press-netty/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="lpwang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://tvax4.sinaimg.cn/crop.85.218.533.533.180/74b07056ly8fgglakg43yj20hs0qogm1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lpwang个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用jmeter压测Netty通讯服务</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-26T17:07:20+08:00">
+                2017-09-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/jmeter/" itemprop="url" rel="index">
+                    <span itemprop="name">jmeter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="使用jmeter压测Netty通讯服务"><a href="#使用jmeter压测Netty通讯服务" class="headerlink" title="使用jmeter压测Netty通讯服务"></a>使用jmeter压测Netty通讯服务</h2><blockquote>
+<p>项目中使用<code>netty</code>框架开发底层通讯服务器模块。设备与通讯服务器采用<code>tcp长连接</code>的通讯方式。建立链接过程使用<code>ssl</code>对连接通道进行加密。建立连接后定时向服务器发送心跳数据。</p>
+</blockquote>
+<h3 id="测试目标"><a href="#测试目标" class="headerlink" title="测试目标"></a>测试目标</h3><ol>
+<li>单台 <code>netty server</code> 维持长连接数量。</li>
+<li>长连接数量增长下<code>tps</code>指数。</li>
+<li>长连接数量增长下<code>jvm的堆栈</code>内存变化。</li>
+</ol>
+<h3 id="测试工具"><a href="#测试工具" class="headerlink" title="测试工具"></a>测试工具</h3><ol>
+<li>jmeter</li>
+<li>jvisualvm</li>
+</ol>
+<h3 id="数据准备"><a href="#数据准备" class="headerlink" title="数据准备"></a>数据准备</h3><p>编写脚本准备<code>100W</code>终端信息。直接上代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProduceMAC</span> </span>&#123;</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentLinkedQueue&lt;Jedis&gt; JEDISQUEUE = <span class="keyword">new</span> ConcurrentLinkedQueue&lt;Jedis&gt;();</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> BufferedWriter WRITER = <span class="keyword">null</span>;</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> AtomicInteger MAC_NUM = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</div><div class="line">	</div><div class="line">	<span class="keyword">static</span> &#123;</div><div class="line">		<span class="comment">// init JEDISQUEUE</span></div><div class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">1000</span>;i++) &#123;</div><div class="line">			Jedis redis = <span class="keyword">new</span> Jedis(<span class="string">"192.168.79.83"</span>, <span class="number">6379</span>);</div><div class="line">			redis.select(<span class="number">1</span>);</div><div class="line">			JEDISQUEUE.add(redis);</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">		<span class="comment">// init sql file</span></div><div class="line">		Path path = Paths.get(<span class="string">"D:"</span>, <span class="string">"device.sql"</span>);</div><div class="line">		File devic_sql_file = <span class="keyword">new</span> File(path.toString());</div><div class="line">		<span class="keyword">try</span> &#123;</div><div class="line">			Files.createParentDirs(devic_sql_file);</div><div class="line">			WRITER = <span class="keyword">new</span> BufferedWriter(<span class="keyword">new</span> FileWriter( devic_sql_file ));</div><div class="line">		&#125;<span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage());</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">		</div><div class="line">		</div><div class="line">		</div><div class="line">		HashSet&lt;String&gt; MacSet = <span class="keyword">new</span> HashSet&lt;String&gt;();</div><div class="line">		String linChar = <span class="string">":"</span>;</div><div class="line">		</div><div class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">1000000</span>;i++) &#123;</div><div class="line">		</div><div class="line">			String mac_1 = UUID.randomUUID().toString().replaceAll(<span class="string">"-"</span>, <span class="string">""</span>).toUpperCase().substring(<span class="number">0</span>, <span class="number">2</span>);</div><div class="line">			String mac_2 = UUID.randomUUID().toString().replaceAll(<span class="string">"-"</span>, <span class="string">""</span>).toUpperCase().substring(<span class="number">2</span>, <span class="number">4</span>);</div><div class="line">			String mac_3 = UUID.randomUUID().toString().replaceAll(<span class="string">"-"</span>, <span class="string">""</span>).toUpperCase().substring(<span class="number">4</span>, <span class="number">6</span>);</div><div class="line">			String mac_4 = UUID.randomUUID().toString().replaceAll(<span class="string">"-"</span>, <span class="string">""</span>).toUpperCase().substring(<span class="number">6</span>, <span class="number">8</span>);</div><div class="line">			String mac_5 = UUID.randomUUID().toString().replaceAll(<span class="string">"-"</span>, <span class="string">""</span>).toUpperCase().substring(<span class="number">8</span>, <span class="number">10</span>);</div><div class="line">			String mac_6 = UUID.randomUUID().toString().replaceAll(<span class="string">"-"</span>, <span class="string">""</span>).toUpperCase().substring(<span class="number">10</span>, <span class="number">12</span>);</div><div class="line">			</div><div class="line">			StringBuilder mac = <span class="keyword">new</span> StringBuilder();</div><div class="line">			mac.append(mac_1).append(linChar).append(mac_2).append(linChar).append(mac_3)</div><div class="line">			.append(linChar).append(mac_4).append(linChar).append(mac_5).append(linChar)</div><div class="line">			.append(mac_6);</div><div class="line">			</div><div class="line">			MacSet.add(mac.toString());</div><div class="line">			</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">		</div><div class="line">		<span class="keyword">if</span> (<span class="number">1000000</span> == MacSet.size()) &#123;</div><div class="line">			PersistenceMAC(MacSet);</div><div class="line">			PersistenceSQL(MacSet);</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PersistenceMAC</span> <span class="params">(HashSet&lt;String&gt; macSet)</span> </span>&#123;</div><div class="line">		System.out.println(<span class="string">"&gt; redis"</span>);</div><div class="line">		ExecutorService es = Executors.newFixedThreadPool(<span class="number">100</span>);</div><div class="line">		<span class="keyword">for</span> (String mac : macSet) &#123;</div><div class="line">			es.execute(<span class="keyword">new</span> Runnable() &#123;</div><div class="line">				</div><div class="line">				<span class="meta">@Override</span></div><div class="line">				<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">					Jedis redis;</div><div class="line">					<span class="keyword">try</span> &#123;</div><div class="line">						redis = JEDISQUEUE.poll();</div><div class="line">						<span class="keyword">int</span> c = ProduceMAC.MAC_NUM.incrementAndGet();</div><div class="line">						redis.hset(<span class="string">"dev_mac"</span>,String.valueOf(c), mac);</div><div class="line">						JEDISQUEUE.add(redis);</div><div class="line">					&#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">						e.printStackTrace();</div><div class="line">					&#125;</div><div class="line">				&#125;</div><div class="line">			&#125;);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PersistenceSQL</span> <span class="params">(HashSet&lt;String&gt; macSet)</span> </span>&#123;</div><div class="line">		</div><div class="line">		<span class="keyword">if</span> (<span class="keyword">null</span> == WRITER) &#123;</div><div class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"no writer"</span>);</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">		StringBuilder SQLSB = <span class="keyword">new</span> StringBuilder();</div><div class="line">		SQLSB = initSQL(SQLSB);</div><div class="line">		System.out.println(<span class="string">"&gt; sql"</span>);</div><div class="line">		</div><div class="line">		<span class="keyword">int</span> count = <span class="number">1</span>;</div><div class="line">		<span class="keyword">int</span> segment = <span class="number">5000</span>;</div><div class="line">		</div><div class="line">		<span class="keyword">try</span> &#123;</div><div class="line">			</div><div class="line">			<span class="keyword">for</span> (String mac : macSet) &#123;</div><div class="line">				</div><div class="line">				<span class="keyword">if</span> (<span class="number">0</span> == count % segment) &#123;</div><div class="line">					SQLSB.append(<span class="string">"('"</span>+ UUID.randomUUID().toString() +<span class="string">"', '0208-4680-4892-1600', 'cb8b3ab7580c46528ba4e4aef59deb47', 'ylcs-"</span>+count+<span class="string">"', '11', '"</span>+mac+<span class="string">"', 'Android1', 'xtgly', now(), 'xtgly', now())"</span>);</div><div class="line">					SQLSB.append(<span class="string">","</span>);</div><div class="line">					<span class="keyword">try</span> &#123;</div><div class="line">						String writeSQL = SQLSB.toString().substring(<span class="number">0</span>, SQLSB.length()-<span class="number">1</span>)+<span class="string">";"</span>;</div><div class="line">						System.out.println(<span class="string">"writeSQL &gt; "</span>+count);</div><div class="line">						WRITER.write(writeSQL);</div><div class="line">						WRITER.newLine();</div><div class="line">						WRITER.flush();</div><div class="line">					&#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage());</div><div class="line">					&#125;</div><div class="line">					SQLSB = initSQL(SQLSB);</div><div class="line">				&#125;<span class="keyword">else</span> &#123;</div><div class="line">					SQLSB.append(<span class="string">"('"</span>+ UUID.randomUUID().toString() +<span class="string">"', '0208-4680-4892-1600', 'cb8b3ab7580c46528ba4e4aef59deb47', 'ylcs-"</span>+count+<span class="string">"', '11', '"</span>+mac+<span class="string">"', 'Android1', 'xtgly', now(), 'xtgly', now())"</span>);</div><div class="line">					SQLSB.append(<span class="string">","</span>);</div><div class="line">				&#125;</div><div class="line">				</div><div class="line">				System.out.println(count);</div><div class="line">				count++;</div><div class="line">			&#125;</div><div class="line">			</div><div class="line">		&#125;<span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage());</div><div class="line">		&#125;<span class="keyword">finally</span> &#123;</div><div class="line">			<span class="keyword">try</span> &#123;</div><div class="line">				WRITER.close();</div><div class="line">			&#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">				e.printStackTrace();</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">		System.out.println(<span class="string">"&gt; sql done"</span>);</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">static</span> StringBuilder <span class="title">initSQL</span> <span class="params">(StringBuilder sql)</span> </span>&#123;</div><div class="line">		sql.delete(<span class="number">0</span>, sql.length());</div><div class="line">		sql.append(<span class="string">"INSERT INTO iot_basic.iot_device "</span>)</div><div class="line">		.append(<span class="string">"(device_id, product_id, active_code, device_name, device_type, device_mac, device_os, adder, add_time, updater, update_time) "</span>)</div><div class="line">		.append(<span class="string">"VALUES "</span>);</div><div class="line">		<span class="keyword">return</span> sql;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ol>
+<li>使用<code>UUID</code>生成<code>100W mac</code>地址</li>
+<li>再使用生成的<code>mac</code>地址分别生成<code>sql</code>脚本，添加到<code>redis</code>中</li>
+<li>将<code>mac</code>信息使用<code>redis</code>的哈希表数据结构进行存储 <code>redis.hset(&quot;dev_mac&quot;,String.valueOf(c), mac);</code> <code>dev_mac</code> 作为<code>key</code> 循环<code>mac</code>集合的<code>index</code> 作为 <code>hash_key</code>, <code>mac</code> 作为<code>hash_value</code>。这样处理方便多机分布式压测。</li>
+<li>循环mac地址集合生成<code>sql</code>脚本，为了进行批处理操作，每<code>5000</code>条<code>mac</code>数据作为一个<code>insert into</code> 语句</li>
+<li>测试脚本运行结束后，将生成的<code>sql</code>脚本 <code>source</code> 到数据库中。</li>
+</ol>
+<h3 id="压力测试脚本"><a href="#压力测试脚本" class="headerlink" title="压力测试脚本"></a>压力测试脚本</h3><p>直接上代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NettyClient</span> <span class="keyword">extends</span> <span class="title">AbstractJavaSamplerClient</span> </span>&#123;</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> SampleResult results;</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> Log log = LogFactory.getLog(NettyClient.class);</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> Jedis redis = <span class="keyword">null</span>;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">start</span> <span class="params">(ConnectionInfoDomain connectionInfoDomain,DeviceRegisterDomain deviceRegisterDomain)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</div><div class="line">		</div><div class="line">		</div><div class="line">		String host = connectionInfoDomain.getHost();</div><div class="line">		<span class="keyword">int</span> port = connectionInfoDomain.getPort();</div><div class="line">		</div><div class="line">		log.info(<span class="string">"准备建立连接: host - "</span>+host+<span class="string">", post - "</span>+port);</div><div class="line">		</div><div class="line">		</div><div class="line">		StringBuilder cerFilePath = <span class="keyword">new</span> StringBuilder();</div><div class="line">		cerFilePath.append(DeviceConstant.DEV_KEY_FILE_BASE_PATH).append(File.separatorChar).append(deviceRegisterDomain.getBusiness().getProductId())</div><div class="line">		.append(File.separatorChar).append(deviceRegisterDomain.getBusiness().getDevMac().replaceAll(<span class="string">":"</span>, <span class="string">""</span>)).append(File.separatorChar)</div><div class="line">		.append(DeviceConstant.DEV_CER_FILE_NAME);</div><div class="line">		</div><div class="line">		StringBuilder privateKeyFilePath = <span class="keyword">new</span> StringBuilder();</div><div class="line">		privateKeyFilePath.append(DeviceConstant.DEV_KEY_FILE_BASE_PATH).append(File.separatorChar).append(deviceRegisterDomain.getBusiness().getProductId()).append(File.separatorChar)</div><div class="line">		.append(deviceRegisterDomain.getBusiness().getDevMac().replaceAll(<span class="string">":"</span>, <span class="string">""</span>)).append(File.separatorChar).append(DeviceConstant.PRIVATE_KEY_FILE_NAME);</div><div class="line">		</div><div class="line">		<span class="keyword">if</span> (!<span class="keyword">new</span> File(cerFilePath.toString()).exists() || !<span class="keyword">new</span> File(privateKeyFilePath.toString()).exists()) &#123;</div><div class="line">			<span class="keyword">try</span> &#123;</div><div class="line">				ActiveRespEntry activeRespEntry = SslFactory.getCertificate(<span class="string">"192.168.79.85"</span>, <span class="number">8060</span>, <span class="string">"/api/iot-basic/device/activate"</span>,deviceRegisterDomain);</div><div class="line">				SSLUtils.persistenceCER(activeRespEntry.getCertificate(),deviceRegisterDomain);</div><div class="line">				SSLUtils.persistenceTerminalId(deviceRegisterDomain.getBusiness().getDevMac(), activeRespEntry.getDeviceId(), connectionInfoDomain);</div><div class="line">			&#125;<span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage());</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">		EventLoopGroup group = <span class="keyword">new</span> NioEventLoopGroup();</div><div class="line">		<span class="keyword">try</span> &#123;</div><div class="line">			Bootstrap b = <span class="keyword">new</span> Bootstrap();</div><div class="line">			b.group(group)</div><div class="line">			.channel(NioSocketChannel.class)</div><div class="line">			.option(ChannelOption.TCP_NODELAY, <span class="keyword">true</span>) <span class="comment">// 不使用 Tcp 缓存</span></div><div class="line">			.handler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;</div><div class="line"></div><div class="line">				<span class="meta">@Override</span></div><div class="line">				<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line">					ChannelPipeline channelPipeline = ch.pipeline();</div><div class="line">					<span class="comment">// channelPipeline.addFirst(new StringDecoder(Charset.forName("UTF-8"))); // 添加字符串解码处理器</span></div><div class="line">					<span class="comment">// channelPipeline.addLast(new DeviceRegisterCommandHandler(deviceRegisterDomain));</span></div><div class="line">					<span class="comment">// channelPipeline.addLast(new AdCommandHandler());</span></div><div class="line">					<span class="comment">// channelPipeline.addLast(new AppUpdateHandler());</span></div><div class="line">					<span class="comment">// channelPipeline.addLast(new HeartBeatHandler());</span></div><div class="line">					</div><div class="line">					</div><div class="line">					SSLEngine sslEngine = SslContextFactory2.getClientContext(deviceRegisterDomain).newEngine(ch.alloc());</div><div class="line">					sslEngine.setUseClientMode(<span class="keyword">true</span>);</div><div class="line">					channelPipeline.addLast(<span class="keyword">new</span> SslHandler(sslEngine));</div><div class="line">					channelPipeline.addLast(<span class="keyword">new</span> HeartBeatHandler( SSLUtils.getTerminalId(deviceRegisterDomain.getBusiness().getDevMac(), connectionInfoDomain) ));</div><div class="line">				&#125;</div><div class="line"></div><div class="line">			&#125;);</div><div class="line">			</div><div class="line">			ChannelFuture f = b.connect(host, port).sync();</div><div class="line">			f.channel().closeFuture().sync();</div><div class="line">		&#125; <span class="keyword">finally</span> &#123;</div><div class="line">			group.shutdownGracefully();</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">T <span class="title">loadConfigFile</span> <span class="params">(String configFilePath,Class&lt;T&gt; parseToClass)</span> <span class="keyword">throws</span> IOException, NoSuchFieldException, SecurityException </span>&#123;</div><div class="line">		<span class="keyword">if</span> (!StringUtils.isNotEmpty(configFilePath))</div><div class="line">			log.error(<span class="string">"设备信息文件路径不能为空！"</span>,<span class="keyword">new</span> RuntimeException(<span class="string">"设备信息文件路径不能为空！"</span>));</div><div class="line">		</div><div class="line">		File configFile = <span class="keyword">new</span> File(configFilePath);</div><div class="line">		<span class="keyword">if</span>(configFile.exists()) &#123;</div><div class="line">			<span class="comment">// 读取设备配置信息</span></div><div class="line">			<span class="keyword">return</span> <span class="keyword">new</span> Gson().fromJson(<span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> FileReader(configFile)), parseToClass);</div><div class="line">		&#125;<span class="keyword">else</span> &#123;</div><div class="line">			log.error(<span class="string">"设备信息文件路径不能到达！配置的错误路径为： "</span>+configFile.getPath());</div><div class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"设备信息文件路径不能为空！"</span>);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	</div><div class="line">	</div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setupTest</span><span class="params">(JavaSamplerContext context)</span> </span>&#123;</div><div class="line">		results = <span class="keyword">new</span> SampleResult();  </div><div class="line">        results.setSamplerData(toString());  </div><div class="line">        results.setDataType(<span class="string">"text"</span>);  </div><div class="line">        results.setContentType(<span class="string">"text/plain"</span>);  </div><div class="line">        results.setDataEncoding(<span class="string">"UTF-8"</span>);  </div><div class="line">  </div><div class="line">        results.setSuccessful(<span class="keyword">true</span>);  </div><div class="line">        results.setResponseMessageOK();  </div><div class="line">        results.setResponseCodeOK();  </div><div class="line">          </div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> SampleResult <span class="title">runTest</span><span class="params">(JavaSamplerContext arg0)</span>  </span>&#123;</div><div class="line">		<span class="keyword">try</span> &#123;</div><div class="line">			</div><div class="line">			results.sampleStart();</div><div class="line">			</div><div class="line">			Path configFilePath =  Paths.get(<span class="string">"/home"</span>,<span class="string">"wanglp"</span>,<span class="string">"communication-pressure-test"</span>,<span class="string">"device-info"</span>, <span class="string">"config.json"</span>); <span class="comment">//"‪E:/Other/device_client/config.json";</span></div><div class="line">			<span class="comment">//Path deviceFilePath =  Paths.get("E:", "Other", "device_client", "deviceInfo.json"); //"‪E:/Other/device_client/deviceInfo.json";</span></div><div class="line">			</div><div class="line">			ConnectionInfoDomain connectionInfoDomain = loadConfigFile(configFilePath.toString(), ConnectionInfoDomain.class);</div><div class="line">			<span class="comment">//DeviceRegisterDomain deviceRegisterDomain = loadConfigFile(deviceFilePath.toString(), DeviceRegisterDomain.class);</span></div><div class="line">			</div><div class="line">			log.info(<span class="string">"解析连接配置文件获取的实体为："</span>+connectionInfoDomain);</div><div class="line">			<span class="comment">//log.debug("解析终端激活配置文件获取的实体为："+deviceRegisterDomain);</span></div><div class="line">			</div><div class="line">			<span class="comment">//RedisFactory.setJedis(connectionInfoDomain.getRedisHost(),connectionInfoDomain.getRedisPort());</span></div><div class="line">			Jedis redis = RedisFactory.getNewConnection(connectionInfoDomain.getRedisHost(),connectionInfoDomain.getRedisPort());</div><div class="line">			redis.select(<span class="number">1</span>);</div><div class="line">			String threadNum = Thread.currentThread().getName().split(<span class="string">"-"</span>)[<span class="number">1</span>].trim();</div><div class="line">			<span class="keyword">int</span> device_num = connectionInfoDomain.getBeginIndex() + Integer.parseInt(threadNum);</div><div class="line">			log.info(<span class="string">"Current device num &gt; "</span>+device_num);</div><div class="line">			</div><div class="line">			String mac = redis.hget(<span class="string">"dev_mac"</span>, String.valueOf(device_num));</div><div class="line">			log.info(<span class="string">"Current Mac &gt; "</span>+mac);</div><div class="line">			redis.close();</div><div class="line">			</div><div class="line">			DeviceRegisterDomain deviceRegisterDomain = <span class="keyword">new</span> DeviceRegisterDomain();</div><div class="line">			DeviceRegisterDomain.Business bussiness = <span class="keyword">new</span> DeviceRegisterDomain.Business(); </div><div class="line">			bussiness.setProductId(<span class="string">"0208-4680-4892-1600"</span>);</div><div class="line">			bussiness.setAuthorizationCode(<span class="string">"CB8B3AB7580C46528BA4E4AEF59DEB47"</span>);</div><div class="line">			bussiness.setDevMac(mac);</div><div class="line">			deviceRegisterDomain.setBusiness(bussiness);</div><div class="line">			</div><div class="line">			NettyClient.start(connectionInfoDomain, deviceRegisterDomain);</div><div class="line">			</div><div class="line">			results.sampleEnd();</div><div class="line">			<span class="keyword">return</span> results;</div><div class="line">		&#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">			log.info(<span class="string">"xxxxx"</span>+e.getMessage());</div><div class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage());</div><div class="line">		&#125;</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ol>
+<li>编写自定义压力测试脚本之前需要几部操作。<ul>
+<li>找到<code>jmeter</code>安装目录 <code>/apache-jmeter-3.2/lib/ext</code> 将<code>ext</code>目录下的<code>ApacheJMeter_core.jar</code> 和 <code>ApacheJMeter_java.jar</code> 引入进测试脚本的工程中。</li>
+<li>将主类 <code>extends AbstractJavaSamplerClient</code> 覆盖其中的两个方法 <code>runTest</code> 和 <code>setupTest</code>。</li>
+<li>在<code>setupTest</code>方法中生成实例 <code>SampleResult</code> 对 <code>SampleResult</code> 进行设置 然后在<code>runTest</code> 方法中进行添加。</li>
+</ul>
+</li>
+<li>将编写好的脚本打包成<code>jar</code>导入到<code>jmeter</code> 目录<code>/apache-jmeter-3.2/lib/ext</code> 中 ， 再将压测脚本所需要的依赖包也导入到 <code>/apache-jmeter-3.2/lib/ext</code> 中。</li>
+<li>打开<code>jmeter gui</code> 添加测试计划，编写测试计划，具体测试计划的线程组编辑下面再介绍。</li>
+<li>使用命令进行压力测试 <code>sh ./jmeter.sh -n -t /home/wanglp/communication-pressure-test/device-info/csjh.jmx</code> <code>-n</code> 表示 <code>no gui</code>  <code>-t</code> 表示编写的测试计划。</li>
+</ol>
+<h3 id="测试计划的线程组编写"><a href="#测试计划的线程组编写" class="headerlink" title="测试计划的线程组编写"></a>测试计划的线程组编写</h3><ol>
+<li>添加测试任务，再在测试计划下添加线程组，如图</li>
+</ol>
+<p><img src="http://wx3.sinaimg.cn/large/74b07056ly1fhq4k9amh9j216u0ejwfj.jpg" alt="image"></p>
+<ul>
+<li>线程数: 表示启动的线程总数。</li>
+<li>Ramp-up period : 表示多少秒后将设置的线程数全部启动。</li>
+<li>循环次数: 表示该线程组配置循环执行几次。</li>
+</ul>
+<h3 id="Jvisualvm-的使用"><a href="#Jvisualvm-的使用" class="headerlink" title="Jvisualvm 的使用"></a>Jvisualvm 的使用</h3><p><code>jvisualvm</code> 用来监控<code>java</code>程序的<code>堆栈内存</code>，<code>cpu</code>，<code>线程</code>，<code>类加载</code>数等信息的使用情况。<code>jvisualvm</code>程序包含在 <code>jdk</code> 家目录下 <code>bin</code> 目录下。为使得 <code>jvisualvm</code> 监控远程的 <code>java</code> 程序 需要为远程的<code>java</code>程序的启动脚本添加<code>jmx</code>参数。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">-Dcom.sun.management.jmxremote.port=&lt;port&gt;</div><div class="line">-Dcom.sun.management.jmxremote.ssl=<span class="keyword">false</span> </div><div class="line">-Dcom.sun.management.jmxremote.authenticate=<span class="keyword">false</span></div></pre></td></tr></table></figure>
+<p>其中 <port> 是 <code>jmx</code> 连接的端口。启动后远程程序后，再回到本机的 <code>jvisualvm</code> ，在远程一栏中添加远程主机，添加之后，再在远程主机下面添加 <code>jmx</code> 连接。</port></p>
+<p>如图：<br><img src="http://wx1.sinaimg.cn/large/74b07056ly1fhqelo3fwtj20cc0j5wes.jpg" alt="image"></p>
+<p>监控 <code>jvisualvm</code> 参数 如图：<br><img src="http://wx1.sinaimg.cn/large/74b07056ly1fhqeln4z5dj21d60ptmyx.jpg" alt="image"></p>
+<h3 id="测试报告"><a href="#测试报告" class="headerlink" title="测试报告"></a>测试报告</h3><table>
+<thead>
+<tr>
+<th>线程数</th>
+<th>栈内存</th>
+<th>堆内存</th>
+<th>压测持续时间</th>
+<th>Server 状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3000</td>
+<td>128M</td>
+<td>256M</td>
+<td>1 小时 18 分 34 秒</td>
+<td>down</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="测试发现的问题"><a href="#测试发现的问题" class="headerlink" title="测试发现的问题"></a>测试发现的问题</h3><ol>
+<li>从微服务获取证书时间长，将线程启动频率调整至 1 thread / 3s 以内时，微服务堆内存溢出。</li>
+<li>随着压测时间的加长，<code>netty server</code> 的堆内存持续增加，直至堆内存溢出。</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/jmeter-netty/" rel="tag"># jmeter netty</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/16/network-model/" rel="next" title="linux网络模型">
+                <i class="fa fa-chevron-left"></i> linux网络模型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/27/jenkins_first/" rel="prev" title="初探jenkins">
+                初探jenkins <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://tvax4.sinaimg.cn/crop.85.218.533.533.180/74b07056ly8fgglakg43yj20hs0qogm1.jpg"
+               alt="lpwang" />
+          <p class="site-author-name" itemprop="name">lpwang</p>
+           
+              <p class="site-description motion-element" itemprop="description">no pain no gain</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lpwang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/1957720150?topnav=1&wvr=6&topsug=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用jmeter压测Netty通讯服务"><span class="nav-number">1.</span> <span class="nav-text">使用jmeter压测Netty通讯服务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试目标"><span class="nav-number">1.1.</span> <span class="nav-text">测试目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试工具"><span class="nav-number">1.2.</span> <span class="nav-text">测试工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据准备"><span class="nav-number">1.3.</span> <span class="nav-text">数据准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压力测试脚本"><span class="nav-number">1.4.</span> <span class="nav-text">压力测试脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试计划的线程组编写"><span class="nav-number">1.5.</span> <span class="nav-text">测试计划的线程组编写</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Jvisualvm-的使用"><span class="nav-number">1.6.</span> <span class="nav-text">Jvisualvm 的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试报告"><span class="nav-number">1.7.</span> <span class="nav-text">测试报告</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试发现的问题"><span class="nav-number">1.8.</span> <span class="nav-text">测试发现的问题</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lpwang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
